@@ -1,0 +1,43 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Python build/cache artefacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Notebooks and EDA outputs (not needed in the runtime image)
+notebooks/
+.ipynb_checkpoints/
+
+# Tests (the container should be lean)
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE / editor noise
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Secrets - never bake them into images
+.env
+.env.*
+*.pem
+*.key
+
+# Local model training scratch
+scripts/
+*.log
