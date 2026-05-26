@@ -1,9 +1,4 @@
-"""
-Automated tests for the MTCARS FastAPI service.
 
-Run from the project root:
-    pytest -v
-"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -34,18 +29,14 @@ def client() -> TestClient:
     return TestClient(app)
 
 
-# ---------------------------------------------------------------------------
-# /health
-# ---------------------------------------------------------------------------
+
 def test_health_returns_ok(client: TestClient) -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
-# ---------------------------------------------------------------------------
-# /ready
-# ---------------------------------------------------------------------------
+
 def test_ready_when_model_loaded(client: TestClient) -> None:
     response = client.get("/ready")
     assert response.status_code == 200
@@ -56,7 +47,6 @@ def test_ready_when_model_loaded(client: TestClient) -> None:
 
 
 def test_ready_returns_503_when_model_missing(client: TestClient) -> None:
-    # Simulate an unloaded model
     saved = model_state["model"]
     saved_error = model_state["error"]
     model_state["model"] = None
@@ -72,16 +62,13 @@ def test_ready_returns_503_when_model_missing(client: TestClient) -> None:
         model_state["error"] = saved_error
 
 
-# ---------------------------------------------------------------------------
-# /predict
-# ---------------------------------------------------------------------------
+
 def test_predict_returns_reasonable_mpg(client: TestClient) -> None:
-    # Mazda RX4 from the dataset: wt=2.62, hp=110, actual mpg=21.0
+   
     response = client.post("/predict", json={"wt": 2.62, "hp": 110})
     assert response.status_code == 200
     body = response.json()
     assert "predicted_mpg" in body
-    # The model should predict close to the actual value (within 5 mpg).
     assert 15 < body["predicted_mpg"] < 28
     assert body["features_used"] == ["wt", "hp"]
     assert set(body["model_coefficients"].keys()) == {"wt", "hp"}
@@ -122,8 +109,5 @@ def test_predict_503_when_model_missing(client: TestClient) -> None:
         model_state["error"] = None
 
 
-# ---------------------------------------------------------------------------
-# Module-level smoke check
-# ---------------------------------------------------------------------------
 def test_app_metadata() -> None:
     assert app_main.app.title == "MTCARS FastAPI"
