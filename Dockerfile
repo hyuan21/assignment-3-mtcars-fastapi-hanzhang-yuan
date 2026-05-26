@@ -1,12 +1,5 @@
-# syntax=docker/dockerfile:1.6
-#
-# MTCARS FastAPI container
-# Build:  podman build -t mtcars-fastapi .
-# Run:    podman run --rm -p 8080:8080 mtcars-fastapi
-
 FROM python:3.11-slim AS runtime
 
-# ---- system setup --------------------------------------------------------
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -15,23 +8,17 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# ---- python dependencies -------------------------------------------------
-# Copy requirements first so layer caches when only application code changes.
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ---- application code ----------------------------------------------------
 COPY app/ ./app/
 COPY models/ ./models/
 COPY mtcars.csv ./mtcars.csv
 
-# ---- non-root user (production hygiene) ---------------------------------
 RUN useradd --create-home --uid 1000 appuser \
     && chown -R appuser:appuser /app
 USER appuser
 
-# ---- runtime configuration -----------------------------------------------
 EXPOSE 8080
 
-# Cloud Run injects PORT; honour it but fall back to 8080 locally.
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]

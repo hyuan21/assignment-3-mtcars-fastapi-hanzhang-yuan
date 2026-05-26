@@ -1,9 +1,3 @@
-"""
-pytest configuration.
-
-Adds the project root to sys.path so that `from app import main` works on
-all platforms, regardless of how pytest auto-discovers test roots.
-"""
 from __future__ import annotations
 
 import sys

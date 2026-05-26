@@ -1,12 +1,4 @@
-"""
-Train a linear regression model that predicts mpg from wt and hp.
 
-Run from the project root:
-    python scripts/train_model.py
-
-Saves the fitted model and its metadata to models/model.pkl using joblib.
-The API loads this artifact at startup.
-"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -37,13 +29,11 @@ def main() -> None:
     model = LinearRegression()
     model.fit(X, y)
 
-    # In-sample metrics
     y_pred = model.predict(X)
     r2 = r2_score(y, y_pred)
     rmse = float(np.sqrt(mean_squared_error(y, y_pred)))
     mae = float(mean_absolute_error(y, y_pred))
 
-    # 5-fold CV for a more honest estimate
     cv = KFold(n_splits=5, shuffle=True, random_state=42)
     cv_r2 = cross_val_score(model, X, y, scoring="r2", cv=cv)
 
@@ -63,7 +53,6 @@ def main() -> None:
     print(f"  scores = {np.round(cv_r2, 4).tolist()}")
     print(f"  mean   = {cv_r2.mean():.4f}  (std = {cv_r2.std():.4f})")
 
-    # Bundle the model with metadata so the API can introspect it
     artifact = {
         "model": model,
         "features": FEATURES,

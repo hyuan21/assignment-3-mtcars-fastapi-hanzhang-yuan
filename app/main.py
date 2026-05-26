@@ -1,21 +1,4 @@
-"""
-FastAPI application that serves predictions from the trained mtcars model.
 
-Endpoints
----------
-GET  /health   - liveness check
-GET  /ready    - readiness check (model loaded?)
-POST /predict  - predict mpg from wt and hp
-
-Configuration
--------------
-MODEL_PATH    - path to the joblib artifact (default: models/model.pkl)
-LOG_LEVEL     - python logging level (default: INFO)
-
-Run locally
------------
-    uvicorn app.main:app --host 0.0.0.0 --port 8080
-"""
 from __future__ import annotations
 
 import logging
@@ -29,9 +12,7 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
+
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
     level=LOG_LEVEL,
@@ -39,15 +20,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger("mtcars-api")
 
-# ---------------------------------------------------------------------------
-# Model loading
-# ---------------------------------------------------------------------------
+
 DEFAULT_MODEL_PATH = Path(__file__).resolve().parent.parent / "models" / "model.pkl"
 MODEL_PATH = Path(os.getenv("MODEL_PATH", str(DEFAULT_MODEL_PATH)))
 
-# `model_state` holds the loaded artifact. We deliberately use a module-level
-# dict so the readiness endpoint can flip without restarting the process and
-# so tests can monkeypatch it.
+
 model_state: dict[str, Any] = {
     "model": None,
     "features": None,
@@ -58,11 +35,6 @@ model_state: dict[str, Any] = {
 
 
 def load_model(path: Path = MODEL_PATH) -> None:
-    """Load the joblib artifact into module state.
-
-    Failures are caught and recorded in `model_state["error"]` so that the
-    /ready endpoint can report them without crashing the whole service.
-    """
     try:
         artifact = joblib.load(path)
         model_state["model"] = artifact["model"]
@@ -84,14 +56,7 @@ def load_model(path: Path = MODEL_PATH) -> None:
         logger.exception("Model loading failed")
 
 
-# ---------------------------------------------------------------------------
-# Pydantic schemas
-# ---------------------------------------------------------------------------
 class PredictionRequest(BaseModel):
-    """Input payload for /predict.
-
-    Predictors match those used during training: wt (1000 lbs) and hp.
-    """
 
     wt: float = Field(
         ...,
@@ -108,9 +73,6 @@ class PredictionRequest(BaseModel):
 
 
 class PredictionResponse(BaseModel):
-    # Disable Pydantic's "model_" protected namespace so we can keep the
-    # natural field names model_intercept / model_coefficients without
-    # warnings.
     model_config = {"protected_namespaces": ()}
 
     predicted_mpg: float = Field(..., description="Predicted miles per gallon.")
@@ -133,12 +95,9 @@ class ReadyResponse(BaseModel):
     error: str | None = None
 
 
-# ---------------------------------------------------------------------------
-# FastAPI app
-# ---------------------------------------------------------------------------
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """Load the model when the app starts; nothing to clean up on shutdown."""
     load_model()
     yield
 
@@ -157,13 +116,11 @@ app = FastAPI(
 
 @app.get("/health", response_model=HealthResponse, tags=["meta"])
 def health() -> HealthResponse:
-    """Liveness check. Returns 200 whenever the process is up."""
     return HealthResponse(status="ok")
 
 
 @app.get("/ready", tags=["meta"])
 def ready() -> JSONResponse:
-    """Readiness check. Returns 503 if the model is not loaded."""
     if model_state["model"] is None:
         body = ReadyResponse(
             status="unavailable",
@@ -193,11 +150,10 @@ def predict(payload: PredictionRequest) -> PredictionResponse:
     model = model_state["model"]
     features: list[str] = model_state["features"]
 
-    # Build the row in the exact feature order the model expects.
     row = [[getattr(payload, f) for f in features]]
     try:
         prediction = float(model.predict(row)[0])
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc: 
         logger.exception("Prediction failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -219,7 +175,6 @@ def predict(payload: PredictionRequest) -> PredictionResponse:
 
 
 if __name__ == "__main__":
-    # Convenience: `python -m app.main` runs uvicorn directly.
     import uvicorn
 
     uvicorn.run(
