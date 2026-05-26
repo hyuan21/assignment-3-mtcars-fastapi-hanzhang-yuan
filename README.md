@@ -335,8 +335,12 @@ curl -X POST "https://<your-service>-<hash>-uc.a.run.app/predict" \
 
 ### Deployed URL
 
-> **TODO: replace this line with your Cloud Run URL once deployed**, e.g.
-> `https://mtcars-fastapi-xxxxxxxxxx-uc.a.run.app`.
+The API is live at:
+
+**<https://mtcars-fastapi-509303146040.us-central1.run.app>**
+
+* Swagger UI: <https://mtcars-fastapi-509303146040.us-central1.run.app/docs>
+* Health: <https://mtcars-fastapi-509303146040.us-central1.run.app/health>
 
 ## 12. Push the project to GitHub
 
